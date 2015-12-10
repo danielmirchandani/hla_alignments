@@ -22,11 +22,10 @@ LOCI['DRB4'] = {'Reference': '01:01:01', 'Type': 'Genomic'}
 LOCI['DRB5'] = {'Reference': '01:01:01', 'Type': 'CDS'}
 
 
-def locus_path(locus):
-    return 'downloaded/{}.html'.format(locus)
-
-
 NOT_WHITESPACE = re.compile(r'\S', re.UNICODE)
+
+
+OUTPUT_DIRECTORY = 'hla-alignments'
 
 
 class OrderedDictOfLists(collections.OrderedDict):
@@ -36,8 +35,8 @@ class OrderedDictOfLists(collections.OrderedDict):
         self[key].extend(elements)
 
 
-def _download_locus(locus):
-    if os.path.exists(locus_path(locus)):
+def _download_locus(locus, output_path):
+    if os.path.exists(output_path):
         print('Already downloaded', locus)
         return
     print('Downloading', locus)
@@ -61,7 +60,7 @@ def _download_locus(locus):
             temp_file.write(chunk)
             print('.', end='')
     print()
-    shutil.move('tmp', locus_path(locus))
+    shutil.move('tmp', output_path)
     print('Downloaded', locus)
 
 
@@ -88,9 +87,9 @@ def _process_header_line(header_line, line, columns):
     return header
 
 
-def _process_locus(locus):
+def _process_locus(locus, input_path, output_path):
     print('Processing', locus)
-    tree = BeautifulSoup(open(locus_path(locus), 'rb'), 'html.parser')
+    tree = BeautifulSoup(open(input_path, 'rb'), 'html.parser')
     header_line = None
     next_line_is_header = False
     # Store the sequences in the same order they appear in the document
@@ -117,10 +116,7 @@ def _process_locus(locus):
             rows.extend(header[0], header[1:])
             header_line = None
         rows.extend(columns[0], columns[1:])
-    with open('{}-split.csv'.format(locus), 'w') as split_file:
-        for row in rows:
-            split_file.write('{},{}\n'.format(row, ','.join(rows[row])))
-    with open('{}-combined.csv'.format(locus), 'w') as combined_file:
+    with open(output_path, 'w') as combined_file:
         first_row = True
         for row in rows:
             # Skip the first row since column headers don't make sense without
@@ -132,10 +128,13 @@ def _process_locus(locus):
 
 
 def main():
+    if not os.path.exists(OUTPUT_DIRECTORY):
+        os.mkdir(OUTPUT_DIRECTORY)
     for locus in LOCI:
-        _download_locus(locus)
-    for locus in LOCI:
-        _process_locus(locus)
+        download_path = '{}/{}.html'.format(OUTPUT_DIRECTORY, locus)
+        _download_locus(locus, download_path)
+        _process_locus(locus, download_path,
+                       '{}/{}.csv'.format(OUTPUT_DIRECTORY, locus))
 
 if __name__ == '__main__':
     main()
