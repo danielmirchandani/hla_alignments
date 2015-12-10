@@ -7,6 +7,7 @@ import shutil
 from bs4 import BeautifulSoup
 import requests
 
+
 LOCI = collections.OrderedDict()
 LOCI['A'] = {'Reference': '01:01:01:01', 'Type': 'Genomic'}
 LOCI['B'] = {'Reference': '07:02:01', 'Type': 'Genomic'}
@@ -35,10 +36,10 @@ class OrderedDictOfLists(collections.OrderedDict):
         self[key].extend(elements)
 
 
-for locus in LOCI:
+def _download_locus(locus):
     if os.path.exists(locus_path(locus)):
         print('Already downloaded', locus)
-        continue
+        return
     print('Downloading', locus)
     # Somehow, this webserver checks the order the post data is in, so use an
     # OrderedDict to force iteration to occur in the same order as insertion
@@ -63,7 +64,8 @@ for locus in LOCI:
     shutil.move('tmp', locus_path(locus))
     print('Downloaded', locus)
 
-for locus in LOCI:
+
+def _process_locus(locus):
     print('Processing', locus)
     tree = BeautifulSoup(open(locus_path(locus), 'rb'), 'html.parser')
     header_line = None
@@ -122,3 +124,13 @@ for locus in LOCI:
                 first_row = False
                 continue
             f.write('{},{}\n'.format(row, ''.join(rows[row])))
+
+
+def main():
+    for locus in LOCI:
+        _download_locus(locus)
+    for locus in LOCI:
+        _process_locus(locus)
+
+if __name__ == '__main__':
+    main()
