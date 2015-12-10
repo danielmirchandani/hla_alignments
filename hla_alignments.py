@@ -110,10 +110,15 @@ for locus in loci:
 			rows.extend(header[0], header[1:])
 			header_line = None
 		rows.extend(columns[0], columns[1:])
-	with open('{}.csv'.format(locus), 'w') as f:
+	with open('{}-split.csv'.format(locus), 'w') as f:
 		for row in rows:
-			f.write(row)
-			for column in rows[row]:
-				f.write(',')
-				f.write(column)
-			f.write('\n')
+			f.write('{},{}\n'.format(row, ','.join(rows[row])))
+	with open('{}-combined.csv'.format(locus), 'w') as f:
+		first_row = True
+		for row in rows:
+			# Skip the first row since column headers don't make sense without
+			# splitting data into columns
+			if first_row:
+				first_row = False
+				continue
+			f.write('{},{}\n'.format(row, ''.join(rows[row])))
