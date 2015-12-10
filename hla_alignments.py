@@ -1,31 +1,31 @@
 from __future__ import print_function
-from bs4 import BeautifulSoup
 import collections
 import os.path
 import re
-import requests
 import shutil
-import sys
 
-loci = collections.OrderedDict()
-loci['A']    = {'Reference': '01:01:01:01', 'Type': 'Genomic'}
-loci['B']    = {'Reference': '07:02:01',    'Type': 'Genomic'}
-loci['C']    = {'Reference': '01:02:01',    'Type': 'Genomic'}
-loci['DPA1'] = {'Reference': '01:03:01:01', 'Type': 'Genomic'}
-loci['DPB1'] = {'Reference': '01:01:01',    'Type': 'Genomic'}
-loci['DQA1'] = {'Reference': '01:01:01',    'Type': 'Genomic'}
-loci['DQB1'] = {'Reference': '05:01:01:01', 'Type': 'Genomic'}
-loci['DRB1'] = {'Reference': '01:01:01',    'Type': 'Genomic'}
-loci['DRB3'] = {'Reference': '01:01:01',    'Type': 'Genomic'}
-loci['DRB4'] = {'Reference': '01:01:01',    'Type': 'Genomic'}
-loci['DRB5'] = {'Reference': '01:01:01',    'Type': 'CDS'}
+from bs4 import BeautifulSoup
+import requests
+
+LOCI = collections.OrderedDict()
+LOCI['A'] = {'Reference': '01:01:01:01', 'Type': 'Genomic'}
+LOCI['B'] = {'Reference': '07:02:01', 'Type': 'Genomic'}
+LOCI['C'] = {'Reference': '01:02:01', 'Type': 'Genomic'}
+LOCI['DPA1'] = {'Reference': '01:03:01:01', 'Type': 'Genomic'}
+LOCI['DPB1'] = {'Reference': '01:01:01', 'Type': 'Genomic'}
+LOCI['DQA1'] = {'Reference': '01:01:01', 'Type': 'Genomic'}
+LOCI['DQB1'] = {'Reference': '05:01:01:01', 'Type': 'Genomic'}
+LOCI['DRB1'] = {'Reference': '01:01:01', 'Type': 'Genomic'}
+LOCI['DRB3'] = {'Reference': '01:01:01', 'Type': 'Genomic'}
+LOCI['DRB4'] = {'Reference': '01:01:01', 'Type': 'Genomic'}
+LOCI['DRB5'] = {'Reference': '01:01:01', 'Type': 'CDS'}
 
 
 def locus_path(locus):
     return 'downloaded/{}.html'.format(locus)
 
 
-NOT_WHITESPACE = re.compile('\S', re.UNICODE)
+NOT_WHITESPACE = re.compile(r'\S', re.UNICODE)
 
 
 class OrderedDictOfLists(collections.OrderedDict):
@@ -35,7 +35,7 @@ class OrderedDictOfLists(collections.OrderedDict):
         self[key].extend(elements)
 
 
-for locus in loci:
+for locus in LOCI:
     if os.path.exists(locus_path(locus)):
         print('Already downloaded', locus)
         continue
@@ -44,8 +44,8 @@ for locus in loci:
     # OrderedDict to force iteration to occur in the same order as insertion
     post_data = collections.OrderedDict()
     post_data['gene'] = locus
-    post_data['Type'] = loci[locus]['Type']
-    post_data['Reference'] = loci[locus]['Reference']
+    post_data['Type'] = LOCI[locus]['Type']
+    post_data['Reference'] = LOCI[locus]['Reference']
     post_data['Sequences'] = ''
     post_data['Display'] = 'Show All Bases'
     post_data['Formatting'] = 10
@@ -63,10 +63,10 @@ for locus in loci:
     shutil.move('tmp', locus_path(locus))
     print('Downloaded', locus)
 
-for locus in loci:
+for locus in LOCI:
     print('Processing', locus)
     tree = BeautifulSoup(open(locus_path(locus), 'rb'), 'html.parser')
-    header_line = ''
+    header_line = None
     next_line_is_header = False
     # Store the sequences in the same order they appear in the document
     rows = OrderedDictOfLists()
