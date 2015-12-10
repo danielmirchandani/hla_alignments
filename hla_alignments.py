@@ -3,8 +3,9 @@ import collections
 import os.path
 import re
 import shutil
+import sys
 
-from bs4 import BeautifulSoup
+import bs4
 import requests
 
 
@@ -64,6 +65,35 @@ def _download_locus(locus, output_path):
     print('Downloaded', locus)
 
 
+def _get_lines_from_download(input_path):
+    soup = bs4.BeautifulSoup(open(input_path, 'rb'), 'html.parser')
+    # BeautifulSoup treats <br> as enclosing all further content until the
+    # tag enclosing the <br> is closed. For example, for "<p>a<br>b<br>c</p>",
+    # BeautifulSoup creates:
+    # Tag('p', ['a', Tag('br', ['b', Tag('br', ['c'])])])
+    current_br = soup.find('pre').br
+    while current_br:
+        line = ''
+        next_br = None
+        for element in current_br.children:
+            if isinstance(element, bs4.element.Tag):
+                if element.name == 'br':
+                    # A <br> element means the end of the current line
+                    yield line
+                    next_br = element
+                elif element.name == 'span':
+                    # Treat <span> elements as continuing the line
+                    line += unicode(element.string)
+                else:
+                    print('Found tag with unknown name', element.name,
+                          file=sys.stderr)
+            elif isinstance(element, bs4.element.NavigableString):
+                line += unicode(element.string)
+            else:
+                print('Found unknown type', type(element), file=sys.stderr)
+        current_br = next_br
+
+
 def _process_header_line(header_line, line, columns):
     column_end = 0
     header = []
@@ -89,13 +119,11 @@ def _process_header_line(header_line, line, columns):
 
 def _process_locus(locus, input_path, output_path):
     print('Processing', locus)
-    tree = BeautifulSoup(open(input_path, 'rb'), 'html.parser')
     header_line = None
     next_line_is_header = False
     # Store the sequences in the same order they appear in the document
     rows = OrderedDictOfLists()
-    for element in tree.find('pre').find_all(string=True):
-        line = unicode(element.string)
+    for line in _get_lines_from_download(input_path):
         if len(line) == 1:
             # Every block of lines starts with a single-space line, so the next
             # line is the header
