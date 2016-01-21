@@ -10,7 +10,7 @@ import bs4
 import requests
 
 
-LOCI = {
+_LOCI = {
     'A': {'Reference': '01:01:01:01', 'Type': 'Genomic'},
     'B': {'Reference': '07:02:01', 'Type': 'Genomic'},
     'C': {'Reference': '01:02:01', 'Type': 'Genomic'},
@@ -25,10 +25,10 @@ LOCI = {
 }
 
 
-NOT_WHITESPACE = re.compile(r'\S', re.UNICODE)
+_NOT_WHITESPACE = re.compile(r'\S', re.UNICODE)
 
 
-OUTPUT_DIRECTORY = 'hla-alignments'
+_OUTPUT_DIRECTORY = 'hla-alignments'
 
 
 class OrderedDictOfLists(collections.OrderedDict):
@@ -47,8 +47,8 @@ def _download_locus(locus, output_path):
     # OrderedDict to force iteration to occur in the same order as insertion
     post_data = collections.OrderedDict()
     post_data['gene'] = locus
-    post_data['Type'] = LOCI[locus]['Type']
-    post_data['Reference'] = LOCI[locus]['Reference']
+    post_data['Type'] = _LOCI[locus]['Type']
+    post_data['Reference'] = _LOCI[locus]['Reference']
     post_data['Sequences'] = ''
     post_data['Display'] = 'Show All Bases'
     post_data['Formatting'] = 10
@@ -111,7 +111,7 @@ def _process_header_line(header_line, line, columns):
         # are columns that aren't wide enough for the column header, so
         # the rest of the column headers get pushed forwards.
         while (header_end + 1 < len(header_line) - 1) and (
-                NOT_WHITESPACE.match(header_line[header_end + 1])):
+                _NOT_WHITESPACE.match(header_line[header_end + 1])):
             header_end += 1
         header_push += (header_end - column_end)
         header.append(
@@ -158,13 +158,13 @@ def _process_locus(locus, input_path, output_path):
 
 
 def main():
-    if not os.path.exists(OUTPUT_DIRECTORY):
-        os.mkdir(OUTPUT_DIRECTORY)
-    for locus in sorted(LOCI):
-        download_path = '{}/{}.html'.format(OUTPUT_DIRECTORY, locus)
+    if not os.path.exists(_OUTPUT_DIRECTORY):
+        os.mkdir(_OUTPUT_DIRECTORY)
+    for locus in sorted(_LOCI):
+        download_path = '{}/{}.html'.format(_OUTPUT_DIRECTORY, locus)
         _download_locus(locus, download_path)
         _process_locus(locus, download_path,
-                       '{}/{}.csv'.format(OUTPUT_DIRECTORY, locus))
+                       '{}/{}.csv'.format(_OUTPUT_DIRECTORY, locus))
 
 if __name__ == '__main__':
     main()
