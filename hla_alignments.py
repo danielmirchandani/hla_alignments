@@ -9,18 +9,19 @@ import bs4
 import requests
 
 
-LOCI = collections.OrderedDict()
-LOCI['A'] = {'Reference': '01:01:01:01', 'Type': 'Genomic'}
-LOCI['B'] = {'Reference': '07:02:01', 'Type': 'Genomic'}
-LOCI['C'] = {'Reference': '01:02:01', 'Type': 'Genomic'}
-LOCI['DPA1'] = {'Reference': '01:03:01:01', 'Type': 'Genomic'}
-LOCI['DPB1'] = {'Reference': '01:01:01', 'Type': 'Genomic'}
-LOCI['DQA1'] = {'Reference': '01:01:01', 'Type': 'Genomic'}
-LOCI['DQB1'] = {'Reference': '05:01:01:01', 'Type': 'Genomic'}
-LOCI['DRB1'] = {'Reference': '01:01:01', 'Type': 'Genomic'}
-LOCI['DRB3'] = {'Reference': '01:01:01', 'Type': 'Genomic'}
-LOCI['DRB4'] = {'Reference': '01:01:01', 'Type': 'Genomic'}
-LOCI['DRB5'] = {'Reference': '01:01:01', 'Type': 'CDS'}
+LOCI = {
+    'A': {'Reference': '01:01:01:01', 'Type': 'Genomic'},
+    'B': {'Reference': '07:02:01', 'Type': 'Genomic'},
+    'C': {'Reference': '01:02:01', 'Type': 'Genomic'},
+    'DPA1': {'Reference': '01:03:01:01', 'Type': 'Genomic'},
+    'DPB1': {'Reference': '01:01:01', 'Type': 'Genomic'},
+    'DQA1': {'Reference': '01:01:01', 'Type': 'Genomic'},
+    'DQB1': {'Reference': '05:01:01:01', 'Type': 'Genomic'},
+    'DRB1': {'Reference': '01:01:01', 'Type': 'Genomic'},
+    'DRB3': {'Reference': '01:01:01', 'Type': 'Genomic'},
+    'DRB4': {'Reference': '01:01:01', 'Type': 'Genomic'},
+    'DRB5': {'Reference': '01:01:01', 'Type': 'CDS'},
+}
 
 
 NOT_WHITESPACE = re.compile(r'\S', re.UNICODE)
@@ -158,7 +159,7 @@ def _process_locus(locus, input_path, output_path):
 def main():
     if not os.path.exists(OUTPUT_DIRECTORY):
         os.mkdir(OUTPUT_DIRECTORY)
-    for locus in LOCI:
+    for locus in sorted(LOCI):
         download_path = '{}/{}.html'.format(OUTPUT_DIRECTORY, locus)
         _download_locus(locus, download_path)
         _process_locus(locus, download_path,
