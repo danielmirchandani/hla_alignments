@@ -43,8 +43,8 @@ def _download_locus(locus, output_path):
         print('Already downloaded', locus)
         return
     print('Downloading', locus)
-    # Somehow, this webserver checks the order the post data is in, so use an
-    # OrderedDict to force iteration to occur in the same order as insertion
+    # This webserver uses POST data by index, not by name; use an OrderedDict
+    # so POST data is sent in this specific order.
     post_data = collections.OrderedDict()
     post_data['gene'] = locus
     post_data['Type'] = _LOCI[locus]['Type']
