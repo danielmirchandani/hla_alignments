@@ -51,7 +51,8 @@ def _download_locus(locus, output_path):
     with open('tmp', 'wb') as temp_file:
         for chunk in locus_page.iter_content(chunk_size=1024*1024):
             temp_file.write(chunk)
-            print('.', end='')
+            print('.', end='', file=sys.stdout)
+            sys.stdout.flush()
     print()
     shutil.move('tmp', output_path)
     print('Downloaded', locus)
