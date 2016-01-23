@@ -105,8 +105,7 @@ def _process_header_line(header_line, line, columns):
                 _NOT_WHITESPACE.match(header_line[header_end + 1])):
             header_end += 1
         header_push += (header_end - column_end)
-        header.append(
-            header_line[header_start:header_end + 1].strip())
+        header.append(header_line[header_start:header_end + 1].strip())
     return header
 
 
