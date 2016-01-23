@@ -9,7 +9,6 @@ import sys
 import bs4
 import requests
 
-
 _LOCI = {
     'A': {'Reference': '01:01:01:01', 'Type': 'Genomic'},
     'B': {'Reference': '07:02:01', 'Type': 'Genomic'},
@@ -24,9 +23,9 @@ _LOCI = {
     'DRB5': {'Reference': '01:01:01', 'Type': 'CDS'},
 }
 
+_LOCI_URL = 'http://www.ebi.ac.uk/cgi-bin/ipd/imgt/hla/align.cgi'
 
 _NOT_WHITESPACE = re.compile(r'\S', re.UNICODE)
-
 
 _OUTPUT_DIRECTORY = 'hla-alignments'
 
@@ -48,9 +47,7 @@ def _download_locus(locus, output_path):
     post_data['Omit'] = 'N'
     post_data['Printing'] = 'P'
     post_data['submit'] = 'Align Sequences Now'
-    locus_page = requests.post(
-        'http://www.ebi.ac.uk/cgi-bin/ipd/imgt/hla/align.cgi', data=post_data,
-        stream=True)
+    locus_page = requests.post(_LOCI_URL, data=post_data, stream=True)
     with open('tmp', 'wb') as temp_file:
         for chunk in locus_page.iter_content(chunk_size=1024*1024):
             temp_file.write(chunk)
