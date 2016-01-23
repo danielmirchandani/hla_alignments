@@ -31,13 +31,6 @@ _NOT_WHITESPACE = re.compile(r'\S', re.UNICODE)
 _OUTPUT_DIRECTORY = 'hla-alignments'
 
 
-class OrderedDictOfLists(collections.OrderedDict):
-    def extend(self, key, elements):
-        if key not in self:
-            self[key] = []
-        self[key].extend(elements)
-
-
 def _download_locus(locus, output_path):
     if os.path.exists(output_path):
         print('Already downloaded', locus)
@@ -122,9 +115,9 @@ def _process_header_line(header_line, line, columns):
 def _process_locus(locus, input_path, output_path):
     print('Processing', locus)
     header_line = None
+    header_row = []
     next_line_is_header = False
-    # Store the sequences in the same order they appear in the document
-    rows = OrderedDictOfLists()
+    rows = collections.defaultdict(lambda: [])
     for line in _get_lines_from_download(input_path):
         if len(line) == 1:
             # Every block of lines starts with a single-space line, so the next
@@ -143,17 +136,11 @@ def _process_locus(locus, input_path, output_path):
         # line are
         if header_line is not None:
             header = _process_header_line(header_line, line, columns)
-            rows.extend(header[0], header[1:])
+            header_row.extend(header[1:])
             header_line = None
-        rows.extend(columns[0], columns[1:])
+        rows[columns[0]].extend(columns[1:])
     with open(output_path, 'w') as combined_file:
-        first_row = True
-        for row in rows:
-            # Skip the first row since column headers don't make sense without
-            # splitting data into columns
-            if first_row:
-                first_row = False
-                continue
+        for row in sorted(rows):
             combined_file.write('{},{}\n'.format(row, ''.join(rows[row])))
 
 
