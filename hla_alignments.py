@@ -91,7 +91,7 @@ def _get_lines_from_download(input_path):
     yield line
 
 
-def _process_locus(locus_name, input_path, output_path):
+def _read_locus(locus_name, input_path):
     print('Processing', locus_name)
     alleles = {}
     allele_columns = collections.defaultdict(lambda: [])
@@ -124,6 +124,10 @@ def _process_locus(locus_name, input_path, output_path):
             print('Length of', reference_allele_name, 'is',
                   len_reference_allele, 'while length of', allele_name, 'is',
                   len_allele, file=sys.stderr)
+    return alleles
+
+
+def _save_locus_as_csv(alleles, output_path):
     with open(output_path, 'w') as output_file:
         for allele_name in sorted(alleles):
             output_file.write('{},{}\n'.format(allele_name,
@@ -136,8 +140,9 @@ def main():
     for locus_name in sorted(_LOCI):
         download_path = '{}/{}.html'.format(_OUTPUT_DIRECTORY, locus_name)
         _download_locus(locus_name, download_path)
-        _process_locus(locus_name, download_path,
-                       '{}/{}.csv'.format(_OUTPUT_DIRECTORY, locus_name))
+        alleles = _read_locus(locus_name, download_path)
+        csv_path = '{}/{}.csv'.format(_OUTPUT_DIRECTORY, locus_name)
+        _save_locus_as_csv(alleles, csv_path)
 
 if __name__ == '__main__':
     main()
