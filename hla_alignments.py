@@ -60,19 +60,21 @@ def _download_locus(locus, output_path):
 
 def _get_lines_from_download(input_path):
     soup = bs4.BeautifulSoup(open(input_path, 'rb'), 'html.parser')
+    # The text starts after the first <br>, so ignore any text before it
+    current_br = soup.find('pre').br
+    line = ''
     # BeautifulSoup treats <br> as enclosing all further content until the
     # tag enclosing the <br> is closed. For example, for "<p>a<br>b<br>c</p>",
     # BeautifulSoup creates:
     # Tag('p', ['a', Tag('br', ['b', Tag('br', ['c'])])])
-    current_br = soup.find('pre').br
     while current_br:
-        line = ''
         next_br = None
         for element in current_br.children:
             if isinstance(element, bs4.element.Tag):
                 if element.name == 'br':
                     # A <br> element means the end of the current line
                     yield line
+                    line = ''
                     next_br = element
                 elif element.name == 'span':
                     # Treat <span> elements as continuing the line
@@ -85,6 +87,7 @@ def _get_lines_from_download(input_path):
             else:
                 print('Found unknown type', type(element), file=sys.stderr)
         current_br = next_br
+    yield line
 
 
 def _process_header_line(header_line, line, columns):
