@@ -1,6 +1,7 @@
 #!/usr/bin/python
 from __future__ import print_function
 import collections
+import itertools
 import os.path
 import re
 import shutil
@@ -105,7 +106,7 @@ def _process_locus(locus, input_path, output_path):
             next_line_is_header = False
             continue
         columns = line.split()
-        rows[columns[0]].extend(columns[1:])
+        rows[columns[0]].extend(itertools.islice(columns, 1, None))
     with open(output_path, 'w') as combined_file:
         for row in sorted(rows):
             combined_file.write('{},{}\n'.format(row, ''.join(rows[row])))
