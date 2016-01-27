@@ -90,32 +90,8 @@ def _get_lines_from_download(input_path):
     yield line
 
 
-def _process_header_line(header_line, line, columns):
-    column_end = 0
-    header = []
-    header_push = 0
-    for column in columns:
-        # Start looking for the next column at the end of the previous
-        # column
-        column_start = line.index(column, column_end)
-        column_end = column_start + len(column) - 1
-        header_start = header_push + column_start
-        header_end = header_push + column_end
-        # Normally, the column header ends at "column_end", but there
-        # are columns that aren't wide enough for the column header, so
-        # the rest of the column headers get pushed forwards.
-        while (header_end + 1 < len(header_line) - 1) and (
-                _NOT_WHITESPACE.match(header_line[header_end + 1])):
-            header_end += 1
-        header_push += (header_end - column_end)
-        header.append(header_line[header_start:header_end + 1].strip())
-    return header
-
-
 def _process_locus(locus, input_path, output_path):
     print('Processing', locus)
-    header_line = None
-    header_row = []
     next_line_is_header = False
     rows = collections.defaultdict(lambda: [])
     for line in _get_lines_from_download(input_path):
@@ -125,19 +101,10 @@ def _process_locus(locus, input_path, output_path):
             next_line_is_header = True
             continue
         if next_line_is_header:
-            # The header line has to be processed differently depending on how
-            # lines in the body are processed, so don't split it right now
-            header_line = line
+            # The header line is useless for this processing, so skip it
             next_line_is_header = False
             continue
         columns = line.split()
-        # For the first body line after the header line, use the position of the
-        # splits in that body line to figure out where the columns in the header
-        # line are
-        if header_line is not None:
-            header = _process_header_line(header_line, line, columns)
-            header_row.extend(header[1:])
-            header_line = None
         rows[columns[0]].extend(columns[1:])
     with open(output_path, 'w') as combined_file:
         for row in sorted(rows):
