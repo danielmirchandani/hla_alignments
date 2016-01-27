@@ -31,17 +31,17 @@ _NOT_WHITESPACE = re.compile(r'\S', re.UNICODE)
 _OUTPUT_DIRECTORY = 'hla-alignments'
 
 
-def _download_locus(locus, output_path):
+def _download_locus(locus_name, output_path):
     if os.path.exists(output_path):
-        print('Already downloaded', locus)
+        print('Already downloaded', locus_name)
         return
-    print('Downloading', locus)
+    print('Downloading', locus_name)
     # This webserver uses POST data by index, not by name; use an OrderedDict
     # so POST data is sent in this specific order.
     post_data = collections.OrderedDict()
-    post_data['gene'] = locus
-    post_data['Type'] = _LOCI[locus]['Type']
-    post_data['Reference'] = _LOCI[locus]['Reference']
+    post_data['gene'] = locus_name
+    post_data['Type'] = _LOCI[locus_name]['Type']
+    post_data['Reference'] = _LOCI[locus_name]['Reference']
     post_data['Sequences'] = ''
     post_data['Display'] = 'Show All Bases'
     post_data['Formatting'] = 10
@@ -56,7 +56,7 @@ def _download_locus(locus, output_path):
             sys.stdout.flush()
     print()
     shutil.move('tmp', output_path)
-    print('Downloaded', locus)
+    print('Downloaded', locus_name)
 
 
 def _get_lines_from_download(input_path):
@@ -91,10 +91,11 @@ def _get_lines_from_download(input_path):
     yield line
 
 
-def _process_locus(locus, input_path, output_path):
-    print('Processing', locus)
+def _process_locus(locus_name, input_path, output_path):
+    print('Processing', locus_name)
+    alleles = {}
+    allele_columns = collections.defaultdict(lambda: [])
     next_line_is_header = False
-    rows = collections.defaultdict(lambda: [])
     for line in _get_lines_from_download(input_path):
         if len(line) == 1:
             # Every block of lines starts with a single-space line, so the next
@@ -106,20 +107,24 @@ def _process_locus(locus, input_path, output_path):
             next_line_is_header = False
             continue
         columns = line.split()
-        rows[columns[0]].extend(itertools.islice(columns, 1, None))
-    with open(output_path, 'w') as combined_file:
-        for row in sorted(rows):
-            combined_file.write('{},{}\n'.format(row, ''.join(rows[row])))
+        allele_name = columns[0]
+        allele_columns[allele_name].extend(itertools.islice(columns, 1, None))
+    for allele_name in allele_columns:
+        alleles[allele_name] = ''.join(allele_columns[allele_name])
+    with open(output_path, 'w') as output_file:
+        for allele_name in sorted(alleles):
+            output_file.write('{},{}\n'.format(allele_name,
+                                               alleles[allele_name]))
 
 
 def main():
     if not os.path.exists(_OUTPUT_DIRECTORY):
         os.mkdir(_OUTPUT_DIRECTORY)
-    for locus in sorted(_LOCI):
-        download_path = '{}/{}.html'.format(_OUTPUT_DIRECTORY, locus)
-        _download_locus(locus, download_path)
-        _process_locus(locus, download_path,
-                       '{}/{}.csv'.format(_OUTPUT_DIRECTORY, locus))
+    for locus_name in sorted(_LOCI):
+        download_path = '{}/{}.html'.format(_OUTPUT_DIRECTORY, locus_name)
+        _download_locus(locus_name, download_path)
+        _process_locus(locus_name, download_path,
+                       '{}/{}.csv'.format(_OUTPUT_DIRECTORY, locus_name))
 
 if __name__ == '__main__':
     main()
