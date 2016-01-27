@@ -109,7 +109,8 @@ def _read_locus(locus_name, input_path):
             continue
         columns = line.split()
         allele_name = columns[0]
-        allele_columns[allele_name].extend(itertools.islice(columns, 1, None))
+        for column in itertools.islice(columns, 1, None):
+            allele_columns[allele_name].append(column.replace('|', ''))
         # The first alelle is the reference allele against which other alleles
         # are compared
         if reference_allele_name is None:
