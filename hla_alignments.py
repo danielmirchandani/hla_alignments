@@ -96,6 +96,7 @@ def _process_locus(locus_name, input_path, output_path):
     alleles = {}
     allele_columns = collections.defaultdict(lambda: [])
     next_line_is_header = False
+    reference_allele_name = None
     for line in _get_lines_from_download(input_path):
         if len(line) == 1:
             # Every block of lines starts with a single-space line, so the next
@@ -109,8 +110,20 @@ def _process_locus(locus_name, input_path, output_path):
         columns = line.split()
         allele_name = columns[0]
         allele_columns[allele_name].extend(itertools.islice(columns, 1, None))
+        # The first alelle is the reference allele against which other alleles
+        # are compared
+        if reference_allele_name is None:
+            reference_allele_name = allele_name
     for allele_name in allele_columns:
         alleles[allele_name] = ''.join(allele_columns[allele_name])
+    # As a sanity check, make sure every allele is the same length
+    for allele_name in alleles:
+        len_allele = len(alleles[allele_name])
+        len_reference_allele = len(alleles[reference_allele_name])
+        if len_allele != len_reference_allele:
+            print('Length of', reference_allele_name, 'is',
+                  len_reference_allele, 'while length of', allele_name, 'is',
+                  len_allele, file=sys.stderr)
     with open(output_path, 'w') as output_file:
         for allele_name in sorted(alleles):
             output_file.write('{},{}\n'.format(allele_name,
